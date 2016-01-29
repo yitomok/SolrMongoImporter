@@ -2,32 +2,30 @@ package org.apache.solr.handler.dataimport;
 
 import java.util.Map;
 
-/**
- * Created by IntelliJ IDEA.
- * User: James
- * Date: 15/08/12
- * Time: 13:52
- * To change this template use File | Settings | File Templates.
- */
-public class MongoMapperTransformer extends Transformer{
+import org.bson.BSONObject;
+import org.bson.BasicBSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    @Override
-    public Object transformRow(Map<String, Object> row, Context context) {
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 
-        for (Map<String, String> map : context.getAllEntityFields()) {
-            String mongoFieldName = map.get( MONGO_FIELD );
-            if( mongoFieldName == null )
-                continue;
+public class MongoMapperTransformer extends Transformer {
+	private static final Logger LOG = LoggerFactory.getLogger(MongoMapperTransformer.class);
 
-            String columnFieldName = map.get( DataImporter.COLUMN );
+	@Override
+	public Object transformRow(Map<String, Object> row, Context context) {
+		LOG.debug("Transforming row: " + row);
+		for (Map<String, String> field : context.getAllEntityFields()) {
+			String jsonPath = field.get(JSONPATH);
+			if (jsonPath != null) {
+				BSONObject obj = new BasicBSONObject(row);
+				Object document = Configuration.defaultConfiguration().jsonProvider().parse(obj.toString());
+				row.put(field.get(DataImporter.COLUMN), JsonPath.read(document, jsonPath));
+			}
+		}
+		return row;
+	}
 
-            row.put( columnFieldName,  row.get( mongoFieldName ) );
-
-        }
-
-
-        return row;
-    }
-
-    public static final String MONGO_FIELD = "mongoField";
+	public static final String JSONPATH = "jsonpath";
 }

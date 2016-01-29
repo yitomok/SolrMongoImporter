@@ -5,11 +5,13 @@
 
     <target name="clean">
         <delete dir="build"/>
+        <ivy:cleancache />
     </target>
 
     <target name="init" depends="clean">
         <mkdir dir="build"/>
-<!--        <ivy:retrieve /> -->
+        <ivy:resolve />
+        <ivy:retrieve />
     </target>
 
     <path id="build.classpath">

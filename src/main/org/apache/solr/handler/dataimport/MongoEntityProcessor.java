@@ -1,61 +1,65 @@
 package org.apache.solr.handler.dataimport;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import static org.apache.solr.handler.dataimport.DataImportHandlerException.SEVERE;
-
-/**
- * User: James
- * Date: 14/08/12
- * Time: 09:26
- */
-
+import org.bson.Document;
 
 public class MongoEntityProcessor extends EntityProcessorBase {
-    private static final Logger LOG = LoggerFactory.getLogger(EntityProcessorBase.class);
+	protected MongoDataSource dataSource;
 
-    protected MongoDataSource dataSource;
+	private String collection;
 
-    private String collection;
+	@Override
+	public void init(Context context) {
+		super.init(context);
+		collection = context.getEntityAttribute(COLLECTION);
+		if (collection == null) {
+			throw new DataImportHandlerException(DataImportHandlerException.SEVERE, "Collection must be supplied");
+		}
+		dataSource = (MongoDataSource) context.getDataSource();
+	}
 
-    @Override
-    public void init(Context context) {
-        super.init(context);
-        this.collection = context.getEntityAttribute( COLLECTION );
-        if( this.collection == null ) {
-            throw new DataImportHandlerException(SEVERE,
-                    "Collection must be supplied");
+	protected void initQuery(String query) {
+		this.query = query;
+		DataImporter.QUERY_COUNT.get().incrementAndGet();
+		rowIterator = new BsonDocumentRowIterator(dataSource.getData(query, collection));
+	}
 
-        }
-        this.dataSource  = (MongoDataSource) context.getDataSource();
-    }
+	@Override
+	public Map<String, Object> nextRow() {
+		if (rowIterator == null) {
+			initQuery(context.replaceTokens(context.getEntityAttribute(QUERY)));
+		}
+		return getNext();
+	}
 
-    protected void initQuery(String q) {
-        try {
-            DataImporter.QUERY_COUNT.get().incrementAndGet();
-            rowIterator = dataSource.getData( q, this.collection );
-            this.query = q;
-        } catch (DataImportHandlerException e) {
-            throw e;
-        } catch (Exception e) {
-            LOG.error( "The query failed '" + q + "'", e);
-            throw new DataImportHandlerException(DataImportHandlerException.SEVERE, e);
-        }
-    }
+	private class BsonDocumentRowIterator implements Iterator<Map<String, Object>> {
+		private Iterator<Document> bsonDocumentIterator;
 
-    @Override
-    public Map<String, Object> nextRow() {
-        String query = context.getEntityAttribute( QUERY );
-        if (rowIterator == null) {
-            initQuery(context.replaceTokens(query));
-        }
-        return getNext();
-    }
+		public BsonDocumentRowIterator(Iterator<Document> bsonDocumentIterator) {
+			this.bsonDocumentIterator = bsonDocumentIterator;
+		}
 
-    public static final String QUERY      = "query";
-    public static final String COLLECTION = "collection";
+		@Override
+		public boolean hasNext() {
+			return bsonDocumentIterator.hasNext();
+		}
+
+		@Override
+		public Map<String, Object> next() {
+			Map<String, Object> map = new HashMap<String, Object>();
+
+			for (Entry<String, Object> e : bsonDocumentIterator.next().entrySet()) {
+					map.put(e.getKey(), e.getValue());
+			}
+
+			return map;
+		}
+	}
+
+	public static final String QUERY = "query";
+	public static final String COLLECTION = "collection";
 }
