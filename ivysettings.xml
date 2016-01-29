@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<ivysettings>
+    <settings defaultResolver="default" />
+
+    <resolvers>
+        <ibiblio name="default" m2compatible="true" />
+        <ibiblio name="restlet" m2compatible="true" root="http://maven.restlet.org/" />
+    </resolvers>
+
+    <modules>
+        <module organisation="org.restlet.jee" name="*" resolver="restlet" />
+    </modules>
+</ivysettings>
