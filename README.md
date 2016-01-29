@@ -33,7 +33,8 @@ I rewrited most code to suit my project's needs, but I think it is also suitable
 3. Place both of these jars in your Solr core lib folder (If you created a core with name 'MyCore', place 'lib' under folder 'MyCore', i.e. 'MyCore/lib')
 
 ##Usage
-Here is an example showing the use of all components
+Here is an example showing the use of all components:
+
 MongoDB Collection: Inventory.data
 ```javascript
 {
