@@ -8,7 +8,7 @@
         <ivy:cleancache />
     </target>
 
-    <target name="init" depends="clean">
+    <target name="init">
         <mkdir dir="build"/>
         <ivy:resolve />
         <ivy:retrieve />
@@ -43,7 +43,15 @@
 
 
     <target name="jar" depends="compile">
-        <jar basedir="build" destfile="dest/solr-mongo-importer.jar" />
-    </target>
+        <tstamp>
+            <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+        </tstamp>
 
+        <jar basedir="build" destfile="dest/solr-mongo-importer-${version.num}.jar">
+            <manifest>
+                <attribute name="Implementation-Version" value="${version.num}-b${build.number}" />
+                <attribute name="Built-Date" value="${TODAY}" />
+            </manifest>
+        </jar>
+    </target>
 </project>

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.InvalidJsonException;
 import com.jayway.jsonpath.JsonPath;
 
 public class MongoMapperTransformer extends Transformer {
@@ -20,8 +21,12 @@ public class MongoMapperTransformer extends Transformer {
 			String jsonPath = field.get(JSONPATH);
 			if (jsonPath != null) {
 				BSONObject obj = new BasicBSONObject(row);
-				Object document = Configuration.defaultConfiguration().jsonProvider().parse(obj.toString());
-				row.put(field.get(DataImporter.COLUMN), JsonPath.read(document, jsonPath));
+				try {
+					Object document = Configuration.defaultConfiguration().jsonProvider().parse(obj.toString());
+					row.put(field.get(DataImporter.COLUMN), JsonPath.read(document, jsonPath));
+				} catch (InvalidJsonException e) {
+					LOG.warn("Invalid row found: " + row);
+				}
 			}
 		}
 		return row;
