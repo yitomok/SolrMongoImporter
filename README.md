@@ -7,9 +7,7 @@ I rewrited most code to suit my project's needs, but I think it is also suitable
 * Retrive data from a MongoDb collection
 * Authenticate using MongoDb authentication
 * Map Mongo fields to Solr fields
-
-## Future Plan
-* Delta Import
+* Delta Import - NOTE: It is all based on your schema design
 
 ## Classes
 
@@ -23,7 +21,8 @@ I rewrited most code to suit my project's needs, but I think it is also suitable
     * collection (**required**)
     * query (**required**)
 * MongoMapperTransformer - Map MongoDb fields to your Solr schema
-    * jsonpath (*optional*) - See [Jayway JsonPath](https://github.com/jayway/JsonPath/), and result should return [List](https://docs.oracle.com/javase/8/docs/api/java/util/List.html)
+    * column (**required**) - Solr uses this as field name
+    * jsonpath (**required**) - See [Jayway JsonPath](https://github.com/jayway/JsonPath/), and result should return [List](https://docs.oracle.com/javase/8/docs/api/java/util/List.html)
 
 ## Installation
 1. Firstly you will need a copy of the Solr Mongo Importer jar.

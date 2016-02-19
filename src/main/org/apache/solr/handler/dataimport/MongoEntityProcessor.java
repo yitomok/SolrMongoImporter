@@ -31,7 +31,36 @@ public class MongoEntityProcessor extends EntityProcessorBase {
 	@Override
 	public Map<String, Object> nextRow() {
 		if (rowIterator == null) {
-			initQuery(context.replaceTokens(context.getEntityAttribute(QUERY)));
+			if (Context.FULL_DUMP.equals(context.currentProcess())) {
+				initQuery(context.replaceTokens(context.getEntityAttribute(QUERY)));
+			}
+			if (Context.DELTA_DUMP.equals(context.currentProcess())) {
+				initQuery(context.replaceTokens(context.getEntityAttribute(DELTA_QUERY)));
+			}
+		}
+		return getNext();
+	}
+
+	@Override
+	public Map<String, Object> nextDeletedRowKey() {
+		if (rowIterator == null) {
+			initQuery(context.replaceTokens(context.getEntityAttribute(DELETED_QUERY)));
+		}
+		return getNext();
+	}
+
+	@Override
+	public Map<String, Object> nextModifiedParentRowKey() {
+		if (rowIterator == null) {
+			initQuery(context.replaceTokens(context.getEntityAttribute(MODIFIED_PARENT_QUERY)));
+		}
+		return getNext();
+	}
+
+	@Override
+	public Map<String, Object> nextModifiedRowKey() {
+		if (rowIterator == null) {
+			initQuery(context.replaceTokens(context.getEntityAttribute(MODIFIED_QUERY)));
 		}
 		return getNext();
 	}
@@ -61,5 +90,9 @@ public class MongoEntityProcessor extends EntityProcessorBase {
 	}
 
 	public static final String QUERY = "query";
+	public static final String DELTA_QUERY = "deltaQuery";
+	public static final String DELETED_QUERY = "deletedQuery";
+	public static final String MODIFIED_PARENT_QUERY = "modifiedParentQuery";
+	public static final String MODIFIED_QUERY = "modifiedQuery";
 	public static final String COLLECTION = "collection";
 }
