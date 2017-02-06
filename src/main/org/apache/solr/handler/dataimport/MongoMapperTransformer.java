@@ -1,9 +1,12 @@
 package org.apache.solr.handler.dataimport;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,18 +20,43 @@ public class MongoMapperTransformer extends Transformer {
 	@Override
 	public Object transformRow(Map<String, Object> row, Context context) {
 		LOG.debug("Transforming row: " + row);
+
+		BSONObject obj = null;
+		Object document = null;
 		for (Map<String, String> field : context.getAllEntityFields()) {
-			String jsonPath = field.get(JSONPATH);
-			if (jsonPath != null) {
-				BSONObject obj = new BasicBSONObject(row);
+			if (obj == null) {
+				obj = new BasicBSONObject(row);
 				try {
-					Object document = Configuration.defaultConfiguration().jsonProvider().parse(obj.toString());
-					row.put(field.get(DataImporter.COLUMN), JsonPath.read(document, jsonPath));
+					document = Configuration.defaultConfiguration().jsonProvider().parse(obj.toString());
 				} catch (InvalidJsonException e) {
 					LOG.warn("Invalid row found: " + row);
 				}
 			}
+
+			Object buf;
+			String jsonPath = field.get(JSONPATH);
+			if (jsonPath != null && document != null) {
+				buf = JsonPath.read(document, jsonPath);
+
+				if (buf instanceof ObjectId) {
+					buf = ((ObjectId) buf).toHexString();
+				} else if (buf instanceof List && ((List<?>) buf).getClass().equals(ObjectId.class)) {
+					List<String> list = new ArrayList<String>();
+					for (Object e : (List<?>) buf) {
+						list.add(((ObjectId) e).toHexString());
+					}
+					buf = list;
+				}
+			} else {
+				buf = row.get(field.get(DataImporter.COLUMN));
+
+				if (buf instanceof ObjectId) {
+					buf = ((ObjectId) buf).toHexString();
+				}
+			}
+			row.put(field.get(DataImporter.COLUMN), buf);
 		}
+
 		return row;
 	}
 
