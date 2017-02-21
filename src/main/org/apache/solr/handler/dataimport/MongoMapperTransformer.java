@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.InvalidJsonException;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 public class MongoMapperTransformer extends Transformer {
 	private static final Logger LOG = LoggerFactory.getLogger(MongoMapperTransformer.class);
@@ -36,7 +37,11 @@ public class MongoMapperTransformer extends Transformer {
 			Object buf;
 			String jsonPath = field.get(JSONPATH);
 			if (jsonPath != null && document != null) {
-				buf = JsonPath.read(document, jsonPath);
+				try {
+					buf = JsonPath.read(document, jsonPath);
+				} catch (PathNotFoundException e) {
+					buf = row.get(field.get(DataImporter.COLUMN));
+				}
 
 				if (buf instanceof ObjectId) {
 					buf = ((ObjectId) buf).toHexString();
