@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -56,8 +57,8 @@ public class MongoDataSource extends DataSource<Iterator<Document>> {
 		if (username != null) {
 			credentials.add(MongoCredential.createCredential(username, database, password.toCharArray()));
 		}
-		this.client = new MongoClient(new ServerAddress(host, Integer.parseInt(port)), credentials);
-		this.client.setReadPreference(ReadPreference.secondaryPreferred());
+		MongoClientOptions options = MongoClientOptions.builder().readPreference(ReadPreference.secondaryPreferred()).build();
+		this.client = new MongoClient(new ServerAddress(host, Integer.parseInt(port)), credentials, options);
 		this.database = this.client.getDatabase(database);
 	}
 
